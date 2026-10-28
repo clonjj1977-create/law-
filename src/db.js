@@ -3,11 +3,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 
 const IS_VERCEL = Boolean(process.env.VERCEL || process.env.NOW_REGION);
-const BASE_STORAGE = IS_VERCEL
+const BUNDLED_STORAGE_DIR = path.join(__dirname, '..', 'storage');
+const STORAGE_DIR = IS_VERCEL
   ? path.join(os.tmpdir(), 'kcg_law_storage')
-  : path.join(__dirname, '..', 'storage');
+  : BUNDLED_STORAGE_DIR;
 
-const STORAGE_DIR = BASE_STORAGE;
 const FILES_LAW_DIR = path.join(STORAGE_DIR, 'files', 'law');
 const FILES_RULE_DIR = path.join(STORAGE_DIR, 'files', 'rule');
 const FILES_CHINESE_LAW_DIR = path.join(STORAGE_DIR, 'files', 'chinese_vessel');
@@ -15,7 +15,24 @@ const MANUAL_SAMPLE_DIR = IS_VERCEL
   ? path.join(STORAGE_DIR, '중국어선_단속_관련_법령')
   : path.join(__dirname, '..', '중국어선_단속_관련_법령');
 const DB_PATH = path.join(STORAGE_DIR, 'kcg_law.db');
+const SNAPSHOT_JSON_PATH = path.join(BUNDLED_STORAGE_DIR, 'kcg_law_snapshot.json');
 const JSON_FALLBACK_PATH = path.join(STORAGE_DIR, 'kcg_law_fallback.json');
+
+function copyDirRecursive(src, dest) {
+  if (!fs.existsSync(src)) return;
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, destPath);
+    } else if (!fs.existsSync(destPath)) {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
 
 function ensureDirectories() {
   for (const dir of [STORAGE_DIR, FILES_LAW_DIR, FILES_RULE_DIR, FILES_CHINESE_LAW_DIR, MANUAL_SAMPLE_DIR]) {
@@ -27,11 +44,19 @@ function ensureDirectories() {
       // 읽기 전용 환경 예외 무시
     }
   }
+
+  // Vercel 환경인 경우 번들링된 storage 파일들을 /tmp/kcg_law_storage 로 초기 복사
+  if (IS_VERCEL) {
+    try {
+      copyDirRecursive(BUNDLED_STORAGE_DIR, STORAGE_DIR);
+    } catch (_) {
+      // 복사 예외 무시
+    }
+  }
 }
 
 ensureDirectories();
 
-// Node 24+ 에서는 내장 node:sqlite 사용, Vercel(Node 18/20 등)에서는 JSON 스토어 자동 폴백
 let db = null;
 let useSqlite = false;
 
@@ -43,10 +68,25 @@ try {
   useSqlite = false;
 }
 
+function syncSnapshotFromSqlite() {
+  if (!useSqlite || IS_VERCEL) return;
+  try {
+    const items = db.prepare(`SELECT * FROM laws ORDER BY id ASC`).all();
+    const lastId = items.reduce((max, i) => Math.max(max, Number(i.id || 0)), 0);
+    fs.writeFileSync(SNAPSHOT_JSON_PATH, JSON.stringify({ lastId, items }, null, 2), 'utf8');
+  } catch (_) {
+    // 스냅샷 저장 오류 무시
+  }
+}
+
 function initAndMigrateSchema() {
   if (!useSqlite) {
     if (!fs.existsSync(JSON_FALLBACK_PATH)) {
-      fs.writeFileSync(JSON_FALLBACK_PATH, JSON.stringify({ lastId: 0, items: [] }, null, 2), 'utf8');
+      if (fs.existsSync(SNAPSHOT_JSON_PATH)) {
+        fs.copyFileSync(SNAPSHOT_JSON_PATH, JSON_FALLBACK_PATH);
+      } else {
+        fs.writeFileSync(JSON_FALLBACK_PATH, JSON.stringify({ lastId: 0, items: [] }, null, 2), 'utf8');
+      }
     }
     return;
   }
@@ -99,6 +139,8 @@ function initAndMigrateSchema() {
       COMMIT;
     `);
   }
+
+  syncSnapshotFromSqlite();
 }
 
 initAndMigrateSchema();
@@ -233,6 +275,7 @@ function createLaw(data) {
     data.mime_type || 'text/plain',
     Number(data.file_size || 0)
   );
+  syncSnapshotFromSqlite();
   return getLawById(result.lastInsertRowid);
 }
 
@@ -296,6 +339,7 @@ function updateLaw(id, data) {
     Number(id)
   );
 
+  syncSnapshotFromSqlite();
   return getLawById(id);
 }
 
@@ -323,6 +367,7 @@ function deleteLaw(id) {
 
   const stmt = db.prepare(`DELETE FROM laws WHERE id = ?`);
   stmt.run(Number(id));
+  syncSnapshotFromSqlite();
   return true;
 }
 
@@ -348,6 +393,7 @@ function getStats() {
 module.exports = {
   db,
   STORAGE_DIR,
+  BUNDLED_STORAGE_DIR,
   FILES_LAW_DIR,
   FILES_RULE_DIR,
   FILES_CHINESE_LAW_DIR,
