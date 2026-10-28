@@ -1,0 +1,18 @@
+{
+  "name": "kcg-law-info-center",
+  "version": "1.0.0",
+  "description": "해양경찰 법령정보센터 로컬 웹 애플리케이션",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --no-warnings src/server.js",
+    "test": "node --no-warnings test/run_tests.js"
+  },
+  "keywords": [
+    "해양경찰",
+    "법령정보센터",
+    "법령",
+    "행정규칙"
+  ],
+  "license": "MIT"
+}
+

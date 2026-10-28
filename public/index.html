@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>해양경찰 법령정보센터</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- 최상단 유틸리티 바 -->
+  <div class="top-utility-bar">
+    <div class="top-utility-inner">
+      <div>대한민국 해양안전과 해양주권을 수호하는 <strong>해양경찰청 로컬 법령정보 시스템</strong></div>
+      <div class="util-links">
+        <a href="/list.html?category=법령">법령 목록</a>
+        <a href="/list.html?category=행정규칙">행정규칙 목록</a>
+        <a href="/list.html?category=중국어선 단속 관련 법령" style="color: var(--color-red); font-weight: 800;">🚨 중국어선 단속 관련 법령</a>
+        <a href="/admin.html" class="admin-badge">⚙ 관리자 (파일 업로드)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상단 브랜드 헤더 (첨부3 참조) -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/index.html" class="brand-logo" title="해양경찰 법령정보센터 홈으로 이동">
+        <div class="brand-emblem">KCG</div>
+        <div class="brand-text-group">
+          <span class="brand-agency">해양경찰청 · KOREA COAST GUARD</span>
+          <span class="brand-title">해양경찰 법령정보센터</span>
+        </div>
+      </a>
+      <div>
+        <a href="/admin.html" class="btn btn-brown">📁 법령·행정규칙 파일 수동 업로드 (관리자)</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 메뉴 표시: '법령', '행정규칙', '중국어선 단속 관련 법령' (첨부3 참조) -->
+  <nav class="gnb-bar" aria-label="주요 메뉴">
+    <div class="gnb-inner">
+      <ul class="gnb-menu">
+        <li><a href="/list.html?category=법령" id="menu-law">법령</a></li>
+        <li><a href="/list.html?category=행정규칙" id="menu-rule">행정규칙</a></li>
+        <li><a href="/list.html?category=중국어선 단속 관련 법령" id="menu-chinese">중국어선 단속 관련 법령</a></li>
+      </ul>
+      <div class="gnb-right-actions">
+        <a href="/admin.html" class="btn-home-return" style="background-color: var(--color-brown);">관리자 화면</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 중앙 통합 검색 영역 (첨부3 참조) -->
+  <section class="hero-section">
+    <div class="hero-inner">
+      <h1 class="hero-headline">
+        <strong>해양경찰 법령정보센터</strong>는 해양경찰 관련 <span class="accent-brown">모든 법령·행정규칙 정보</span>를 제공합니다.
+      </h1>
+
+      <form id="homeSearchForm" class="main-search-box" action="/search.html" method="GET">
+        <select name="category" id="searchCategory" class="main-search-select" aria-label="검색 분류 선택" style="width: 215px;">
+          <option value="전체">현행법령·규칙 통합</option>
+          <option value="법령">법령 (법률·령·규칙)</option>
+          <option value="행정규칙">행정규칙 (훈령·예규)</option>
+          <option value="중국어선 단속 관련 법령">중국어선 단속 관련 법령</option>
+        </select>
+        <input
+          type="text"
+          name="q"
+          id="searchInput"
+          class="main-search-input"
+          placeholder="검색어를 입력하세요. (예: 수상레저, 중국어선, 담보금, 배타적 경제수역)"
+          autocomplete="off"
+        />
+        <button type="submit" class="main-search-submit">검색</button>
+      </form>
+
+      <div class="search-helper-row">
+        <div class="search-tip-bubble">
+          정확한 검색결과를 원하시면 검색어를 <strong>큰따옴표(“ ”)</strong>로 감싸보세요.
+        </div>
+        <div class="keyword-chips">
+          <span>추천 검색어:</span>
+          <button type="button" class="keyword-chip" onclick="quickSearch('수상레저')">수상레저</button>
+          <button type="button" class="keyword-chip" onclick="quickSearch('중국어선')" style="border-color: var(--color-red); color: var(--color-red);">중국어선</button>
+          <button type="button" class="keyword-chip" onclick="quickSearch('담보금')" style="border-color: var(--color-red); color: var(--color-red);">담보금·나포</button>
+          <button type="button" class="keyword-chip" onclick="quickSearch('조종면허')">조종면허</button>
+          <button type="button" class="keyword-chip" onclick="quickSearch('해양경비')">해양경비</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 하단 요약 대시보드 및 최근 등록 법령/행정규칙 미리보기 -->
+  <main class="main-container">
+    <div class="home-dashboard-grid">
+      <div class="stat-card">
+        <div>
+          <div class="stat-card-header">
+            <span class="stat-card-title">📘 해양경찰 법령</span>
+            <span class="stat-card-count" id="statLawCount">0건</span>
+          </div>
+          <p class="stat-card-desc">수상레저안전법, 해양경비법 등 해양경찰 소관 법률·대통령령·부령 파일을 조회합니다.</p>
+        </div>
+        <a href="/list.html?category=법령" class="stat-card-link">법령 목록 새 화면으로 보기 →</a>
+      </div>
+
+      <div class="stat-card rule-card">
+        <div>
+          <div class="stat-card-header">
+            <span class="stat-card-title">📙 해양경찰 행정규칙</span>
+            <span class="stat-card-count" id="statRuleCount">0건</span>
+          </div>
+          <p class="stat-card-desc">해양경찰청 훈령·예규·고시 등 일선 현장 업무 규정 및 매뉴얼 파일을 조회합니다.</p>
+        </div>
+        <a href="/list.html?category=행정규칙" class="stat-card-link">행정규칙 목록 새 화면으로 보기 →</a>
+      </div>
+
+      <div class="stat-card chinese-card">
+        <div>
+          <div class="stat-card-header">
+            <span class="stat-card-title">🚨 중국어선 단속 법령</span>
+            <span class="stat-card-count" id="statChineseCount">0건</span>
+          </div>
+          <p class="stat-card-desc">경제수역어업주권법, 영해법, 무기사용 기준 등 불법 중국어선 단속 전용 법령·훈령을 조회합니다.</p>
+        </div>
+        <a href="/list.html?category=중국어선 단속 관련 법령" class="stat-card-link" style="color: var(--color-red);">중국어선 단속 법령 보기 →</a>
+      </div>
+
+      <div class="stat-card admin-card">
+        <div>
+          <div class="stat-card-header">
+            <span class="stat-card-title">⚙ 로컬 파일 수동 업로드</span>
+            <span class="stat-card-count" id="statTotalCount" style="color: var(--color-brown);">총 0건</span>
+          </div>
+          <p class="stat-card-desc">관리자 화면에서 법령 및 행정규칙 파일을 로컬 PC 저장소에 수동 업로드하고 관리합니다.</p>
+        </div>
+        <a href="/admin.html" class="stat-card-link">관리자 파일 업로드 화면 이동 →</a>
+      </div>
+    </div>
+
+    <!-- 중국어선 단속 관련 법령 전용 섹션 -->
+    <div class="law-list-container" style="margin-bottom: 28px; border-color: rgba(253, 60, 45, 0.35);">
+      <div class="law-list-header" style="background-color: rgba(253, 60, 45, 0.08); color: var(--color-red);">
+        <span>🚨 중국어선 단속 관련 법령 (클릭 시 새 창에 상세 내용 표시)</span>
+        <a href="/list.html?category=중국어선 단속 관련 법령" style="color: var(--color-red); font-size: 13px;">중국어선 단속 법령 전체 보기 &gt;</a>
+      </div>
+      <div id="chineseVesselLawList"></div>
+    </div>
+
+    <div class="law-list-container">
+      <div class="law-list-header">
+        <span>📌 로컬 저장소 등록 일반 법령·행정규칙 (클릭 시 새 창에 상세 내용 표시)</span>
+        <a href="/list.html?category=법령" style="color: var(--color-teal); font-size: 13px;">전체 목록 보기 &gt;</a>
+      </div>
+      <div id="recentLawList"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><strong>해양경찰 법령정보센터</strong> | 로컬 PC 독립 운영 웹 애플리케이션</div>
+      <div>첨부1 전용 컬러 팔레트(#724D45 · #04503E · #045043 · #FE8650 · #FD3C2D) 적용</div>
+    </div>
+  </footer>
+
+  <script src="/js/common.js"></script>
+  <script>
+    function quickSearch(keyword) {
+      window.location.href = `/search.html?category=전체&q=${encodeURIComponent(keyword)}`;
+    }
+
+    async function loadHomeData() {
+      try {
+        const [statsRes, lawsRes, chineseRes] = await Promise.all([
+          fetch('/api/stats').then(r => r.json()),
+          fetch('/api/laws').then(r => r.json()),
+          fetch('/api/laws?category=' + encodeURIComponent('중국어선 단속 관련 법령')).then(r => r.json())
+        ]);
+
+        if (statsRes.ok) {
+          document.getElementById('statLawCount').textContent = `${statsRes.stats.lawCount}건`;
+          document.getElementById('statRuleCount').textContent = `${statsRes.stats.ruleCount}건`;
+          document.getElementById('statChineseCount').textContent = `${statsRes.stats.chineseLawCount || 0}건`;
+          document.getElementById('statTotalCount').textContent = `총 ${statsRes.stats.total}건`;
+        }
+
+        const chineseEl = document.getElementById('chineseVesselLawList');
+        if (chineseRes.ok && chineseRes.items.length > 0) {
+          chineseEl.innerHTML = chineseRes.items.map((item, idx) => `
+            <div class="law-item">
+              <div class="law-item-main">
+                <div class="law-item-top">
+                  <span class="law-item-index">${idx + 1}.</span>
+                  <span class="badge ${getBadgeClass(item.category)}">${escapeHtml(item.category)} · ${escapeHtml(item.sub_category || '')}</span>
+                  <a href="javascript:void(0)" class="law-item-title" onclick="openLawViewer(${item.id}, '', '${escapeHtml(item.category)}')">
+                    ${escapeHtml(item.title)}
+                  </a>
+                </div>
+                <div class="law-item-subtitle">${escapeHtml(item.subtitle)}</div>
+                <div class="law-item-meta">
+                  <span>소관부서: ${escapeHtml(item.department.split('\n')[0])}</span>
+                  <span>저장파일: ${escapeHtml(item.file_name)} (${formatFileSize(item.file_size)})</span>
+                </div>
+              </div>
+              <div>
+                <button type="button" class="btn btn-coral" onclick="openLawViewer(${item.id}, '', '${escapeHtml(item.category)}')">
+                  새 창 열람 ↗
+                </button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        const listEl = document.getElementById('recentLawList');
+        const normalItems = (lawsRes.items || []).filter(i => i.category !== '중국어선 단속 관련 법령');
+        if (lawsRes.ok && normalItems.length > 0) {
+          listEl.innerHTML = normalItems.slice(0, 6).map((item, idx) => `
+            <div class="law-item">
+              <div class="law-item-main">
+                <div class="law-item-top">
+                  <span class="law-item-index">${idx + 1}.</span>
+                  <span class="badge ${getBadgeClass(item.category)}">${escapeHtml(item.category)}</span>
+                  <a href="javascript:void(0)" class="law-item-title" onclick="openLawViewer(${item.id}, '', '${escapeHtml(item.category)}')">
+                    ${escapeHtml(item.title)}
+                  </a>
+                </div>
+                <div class="law-item-subtitle">${escapeHtml(item.subtitle)}</div>
+                <div class="law-item-meta">
+                  <span>소관부서: ${escapeHtml(item.department.split('\n')[0])}</span>
+                  <span>저장파일: ${escapeHtml(item.file_name)} (${formatFileSize(item.file_size)})</span>
+                </div>
+              </div>
+              <div>
+                <button type="button" class="btn btn-outline" onclick="openLawViewer(${item.id}, '', '${escapeHtml(item.category)}')">
+                  새 창 열람 ↗
+                </button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          listEl.innerHTML = '<div style="padding:28px; text-align:center; color:#777;">등록된 법령/행정규칙이 없습니다. 관리자 화면에서 파일을 업로드해 주세요.</div>';
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadHomeData();
+  </script>
+</body>
+</html>

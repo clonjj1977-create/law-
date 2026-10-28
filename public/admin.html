@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 화면 (파일 수동 업로드) - 해양경찰 법령정보센터</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="top-utility-bar">
+    <div class="top-utility-inner">
+      <div><strong>해양경찰 법령정보센터</strong> &gt; 관리자 모드 (법령·행정규칙 로컬 파일 업로드 관리)</div>
+      <div class="util-links">
+        <a href="/index.html">🏠 홈 화면으로 돌아가기</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/index.html" class="brand-logo" title="홈 화면으로 돌아가기">
+        <div class="brand-emblem">KCG</div>
+        <div class="brand-text-group">
+          <span class="brand-agency">해양경찰청 · ADMIN CONSOLE</span>
+          <span class="brand-title">해양경찰 법령정보센터 (관리자)</span>
+        </div>
+      </a>
+      <div>
+        <a href="/index.html" class="btn btn-coral">🏠 홈 화면으로 돌아가기</a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="gnb-bar" aria-label="주요 메뉴">
+    <div class="gnb-inner">
+      <ul class="gnb-menu">
+        <li><a href="/list.html?category=법령">법령</a></li>
+        <li><a href="/list.html?category=행정규칙">행정규칙</a></li>
+        <li><a href="/list.html?category=중국어선 단속 관련 법령">중국어선 단속 관련 법령</a></li>
+        <li><a href="/admin.html" class="active">⚙ 관리자 (파일 수동 업로드)</a></li>
+      </ul>
+      <div class="gnb-right-actions">
+        <a href="/index.html" class="btn-home-return">🏠 홈 화면으로 돌아가기</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <div class="page-title-bar" style="border-left-color: var(--color-brown);">
+      <div class="page-title-group">
+        <h1 style="color: var(--color-brown);">⚙ 관리자 화면 — 법령·행정규칙 수동 파일 업로드</h1>
+        <p>업로드한 법령 및 행정규칙 파일은 로컬 PC 저장소(<code>storage/files/</code>)와 로컬 DB(<code>storage/kcg_law.db</code>)에 안전하게 저장됩니다.</p>
+      </div>
+      <div class="page-actions">
+        <a href="/index.html" class="btn btn-coral">🏠 홈 화면으로 돌아가기</a>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- 좌측: 수동 파일 업로드 폼 -->
+      <div class="form-card">
+        <h2 style="font-size: 18px; color: var(--color-brown); margin-bottom: 16px;" id="formTitle">
+          📤 신규 법령·행정규칙 로컬 업로드
+        </h2>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+          <input type="hidden" id="editLawId" value="" />
+
+          <div class="form-group">
+            <label for="categoryInput">메뉴 분류 선택 (필수)</label>
+            <select id="categoryInput" name="category" class="form-control" required>
+              <option value="법령">법령 (법률·대통령령·부령)</option>
+              <option value="행정규칙">행정규칙 (훈령·예규·고시)</option>
+              <option value="중국어선 단속 관련 법령">중국어선 단속 관련 법령 (전용 분류)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="subCategoryInput">세부 법령 종류</label>
+            <input type="text" id="subCategoryInput" name="sub_category" class="form-control" placeholder="예: 법률, 대통령령, 해양수산부령, 해양경찰청훈령" />
+          </div>
+
+          <div class="form-group">
+            <label for="fileInput">로컬 파일 선택 (수동 업로드)</label>
+            <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+              <input type="file" id="fileInput" name="file" style="display:none;" onchange="handleFileSelect(this)" />
+              <div id="fileSelectLabel" style="font-size: 13.5px; color: var(--color-teal); font-weight: 700;">
+                📁 클릭하여 업로드할 법령/행정규칙 파일을 선택하세요<br/>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 400;">(.txt, .md, .html, .pdf, .hwp, .docx 등 모든 파일 지원)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="titleInput">법령 / 행정규칙명 (비워두면 파일명으로 자동 등록)</label>
+            <input type="text" id="titleInput" name="title" class="form-control" placeholder="예: 수상레저안전법" />
+          </div>
+
+          <div class="form-group">
+            <label for="subtitleInput">시행일자 및 법령번호 정보</label>
+            <input type="text" id="subtitleInput" name="subtitle" class="form-control" placeholder="예: [시행 2025. 6. 21.] [법률 제20599호, 2024. 12. 20., 일부개정]" />
+          </div>
+
+          <div class="form-group">
+            <label for="departmentInput">소관부서 및 연락처</label>
+            <input type="text" id="departmentInput" name="department" class="form-control" value="해양경찰청 (수상레저과), 032-835-2351" />
+          </div>
+
+          <div class="form-group">
+            <label for="contentInput">법령 본문 내용 (.txt/.md/.html 업로드 시 파일 내용 자동 추출)</label>
+            <textarea id="contentInput" name="content" class="form-control" placeholder="텍스트 파일 업로드 시 자동 추출되며, 직접 조문 내용을 입력·수정하실 수도 있습니다."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="addendumInput">부칙 (선택)</label>
+            <textarea id="addendumInput" name="addendum" class="form-control" style="min-height: 70px;" placeholder="부칙 내용을 입력하세요 (선택 사항)"></textarea>
+          </div>
+
+          <div id="uploadStatusMsg" style="margin-bottom: 12px; font-size: 13.5px; font-weight: 700;"></div>
+
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;" id="submitBtn">
+              💾 로컬 저장소에 업로드 등록
+            </button>
+            <button type="button" class="btn btn-outline" id="cancelEditBtn" style="display:none;" onclick="resetUploadForm()">
+              취소
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 우측: 로컬에 저장된 파일 목록 및 관리 -->
+      <div class="law-list-container">
+        <div class="law-list-header">
+          <span id="adminListSummary">로컬 저장 파일 목록 (총 0건)</span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12.5px;" onclick="filterAdminList('전체')">전체</button>
+            <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12.5px;" onclick="filterAdminList('법령')">법령</button>
+            <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12.5px;" onclick="filterAdminList('행정규칙')">행정규칙</button>
+            <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12.5px; border-color: var(--color-red); color: var(--color-red);" onclick="filterAdminList('중국어선 단속 관련 법령')">중국어선 단속 관련 법령</button>
+          </div>
+        </div>
+        <div id="adminLawList"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><strong>해양경찰 법령정보센터 관리자</strong> | 로컬 저장 경로: <code>c:\edu_test\storage\</code></div>
+      <div><a href="/index.html" style="text-decoration: underline;">홈 화면으로 돌아가기</a></div>
+    </div>
+  </footer>
+
+  <script src="/js/common.js"></script>
+  <script>
+    let adminFilterCategory = '전체';
+    let allAdminItems = [];
+
+    function handleFileSelect(input) {
+      const label = document.getElementById('fileSelectLabel');
+      const titleInput = document.getElementById('titleInput');
+      if (input.files && input.files[0]) {
+        const f = input.files[0];
+        label.innerHTML = `✅ 선택된 파일: <strong>${escapeHtml(f.name)}</strong> (${formatFileSize(f.size)})`;
+        if (!titleInput.value.trim()) {
+          titleInput.value = f.name.replace(/\.[^/.]+$/, '');
+        }
+      } else {
+        label.innerHTML = `📁 클릭하여 업로드할 법령/행정규칙 파일을 선택하세요`;
+      }
+    }
+
+    function resetUploadForm() {
+      document.getElementById('uploadForm').reset();
+      document.getElementById('editLawId').value = '';
+      document.getElementById('formTitle').textContent = '📤 신규 법령·행정규칙 로컬 업로드';
+      document.getElementById('submitBtn').textContent = '💾 로컬 저장소에 업로드 등록';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+      document.getElementById('fileSelectLabel').innerHTML = '📁 클릭하여 업로드할 법령/행정규칙 파일을 선택하세요';
+    }
+
+    async function loadAdminList() {
+      const res = await fetch(`/api/laws?category=${encodeURIComponent(adminFilterCategory)}`);
+      const data = await res.json();
+      const listEl = document.getElementById('adminLawList');
+
+      if (!data.ok) return;
+      allAdminItems = data.items;
+      document.getElementById('adminListSummary').textContent = `로컬 저장 파일 목록 (${adminFilterCategory} : 총 ${allAdminItems.length}건)`;
+
+      if (allAdminItems.length === 0) {
+        listEl.innerHTML = `<div style="padding: 36px; text-align:center; color:#777;">저장된 파일이 없습니다. 좌측 폼에서 파일을 업로드해 주세요.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = allAdminItems.map((item, idx) => `
+        <div class="law-item">
+          <div class="law-item-main">
+            <div class="law-item-top">
+              <span class="law-item-index">${idx + 1}.</span>
+              <span class="badge ${getBadgeClass(item.category)}">${escapeHtml(item.category)}</span>
+              <a href="javascript:void(0)" class="law-item-title" onclick="openLawViewer(${item.id}, '', '${escapeHtml(item.category)}')">
+                ${escapeHtml(item.title)}
+              </a>
+            </div>
+            <div class="law-item-subtitle">${escapeHtml(item.subtitle)}</div>
+            <div class="law-item-meta">
+              <span>📄 로컬 저장파일: <strong>${escapeHtml(item.file_name)}</strong> (${formatFileSize(item.file_size)})</span>
+              <span>📂 경로: <code>storage/${escapeHtml(item.stored_path)}</code></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            <button type="button" class="btn btn-outline" style="padding:6px 10px; font-size:12.5px;" onclick="openLawViewer(${item.id}, '', '${escapeHtml(item.category)}')">
+              새 창 보기 ↗
+            </button>
+            <button type="button" class="btn btn-brown" style="padding:6px 10px; font-size:12.5px;" onclick="startEditLaw(${item.id})">
+              수정
+            </button>
+            <button type="button" class="btn btn-danger" style="padding:6px 10px; font-size:12.5px;" onclick="removeLaw(${item.id}, '${escapeHtml(item.title)}')">
+              삭제
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterAdminList(cat) {
+      adminFilterCategory = cat;
+      loadAdminList();
+    }
+
+    function startEditLaw(id) {
+      const item = allAdminItems.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('editLawId').value = String(item.id);
+      document.getElementById('categoryInput').value = item.category;
+      document.getElementById('subCategoryInput').value = item.sub_category || '';
+      document.getElementById('titleInput').value = item.title || '';
+      document.getElementById('subtitleInput').value = item.subtitle || '';
+      document.getElementById('departmentInput').value = item.department || '';
+      document.getElementById('contentInput').value = item.content || '';
+      document.getElementById('addendumInput').value = item.addendum || '';
+
+      document.getElementById('formTitle').textContent = `✏️ 등록 정보 수정 (#${item.id})`;
+      document.getElementById('submitBtn').textContent = '💾 수정사항 저장';
+      document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function removeLaw(id, title) {
+      if (!confirm(`'${title}' 항목과 로컬 저장 파일을 삭제하시겠습니까?`)) return;
+      const res = await fetch(`/api/laws/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.ok) {
+        loadAdminList();
+      } else {
+        alert(data.error || '삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('uploadStatusMsg');
+      const editId = document.getElementById('editLawId').value;
+
+      statusEl.style.color = 'var(--color-teal)';
+      statusEl.textContent = '로컬 저장소에 저장 중입니다...';
+
+      try {
+        let res;
+        if (editId) {
+          const payload = {
+            category: document.getElementById('categoryInput').value,
+            sub_category: document.getElementById('subCategoryInput').value,
+            title: document.getElementById('titleInput').value,
+            subtitle: document.getElementById('subtitleInput').value,
+            department: document.getElementById('departmentInput').value,
+            content: document.getElementById('contentInput').value,
+            addendum: document.getElementById('addendumInput').value
+          };
+          res = await fetch(`/api/laws/${editId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          const formData = new FormData(document.getElementById('uploadForm'));
+          res = await fetch('/api/laws', {
+            method: 'POST',
+            body: formData
+          });
+        }
+
+        const data = await res.json();
+        if (data.ok) {
+          statusEl.style.color = 'var(--color-forest)';
+          statusEl.textContent = `✅ '${data.item.title}' 파일이 로컬에 성공적으로 저장되었습니다!`;
+          resetUploadForm();
+          loadAdminList();
+        } else {
+          statusEl.style.color = 'var(--color-red)';
+          statusEl.textContent = `❌ 오류: ${data.error}`;
+        }
+      } catch (err) {
+        statusEl.style.color = 'var(--color-red)';
+        statusEl.textContent = `❌ 통신 오류: ${err.message}`;
+      }
+    });
+
+    loadAdminList();
+  </script>
+</body>
+</html>
+

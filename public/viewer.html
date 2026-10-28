@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>법령 상세 내용 - 해양경찰 법령정보센터</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="viewer-body">
+  <!-- 상단 브랜드 및 검색 헤더 (첨부2 상단 레이아웃 참조) -->
+  <header class="site-header" style="border-bottom: 1px solid var(--border-light);">
+    <div class="header-inner" style="padding: 10px 18px; max-width: 100%;">
+      <a href="/index.html" class="brand-logo" title="홈 화면으로 이동">
+        <div class="brand-emblem" style="width: 36px; height: 36px; font-size: 14px;">KCG</div>
+        <div class="brand-text-group">
+          <span class="brand-agency" style="font-size: 11px;">법제처 스타일 로컬 뷰어</span>
+          <span class="brand-title" style="font-size: 18px;">해양경찰 법령정보센터</span>
+        </div>
+      </a>
+
+      <form id="viewerTopSearchForm" class="header-search-form" style="width: 520px;">
+        <select id="viewerSearchCategory" class="header-search-select">
+          <option value="전체">전체</option>
+          <option value="법령">법령</option>
+          <option value="행정규칙">행정규칙</option>
+          <option value="중국어선 단속 관련 법령">중국어선 단속 관련 법령</option>
+        </select>
+        <input type="text" id="viewerSearchInput" class="header-search-input" placeholder="검색어를 입력하세요 (예: 수상레저, 중국어선)" />
+        <button type="submit" class="header-search-btn">🔍 검색</button>
+      </form>
+
+      <div style="display:flex; gap:8px;">
+        <a href="/index.html" class="btn btn-coral" style="padding: 6px 12px; font-size: 13px;">🏠 홈 화면으로 돌아가기</a>
+        <button type="button" class="btn btn-brown" style="padding: 6px 12px; font-size: 13px;" onclick="window.close()">✕ 창 닫기</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 상단 GNB 메뉴바 ('법령', '행정규칙' - 첨부2 참조) -->
+  <nav class="gnb-bar">
+    <div class="gnb-inner" style="max-width: 100%; padding: 0 18px;">
+      <ul class="gnb-menu">
+        <li><a href="/list.html?category=법령" id="viewerNavLaw" style="padding: 10px 28px; font-size: 15px;">법령</a></li>
+        <li><a href="/list.html?category=행정규칙" id="viewerNavRule" style="padding: 10px 28px; font-size: 15px;">행정규칙</a></li>
+        <li><a href="/list.html?category=중국어선 단속 관련 법령" id="viewerNavChinese" style="padding: 10px 28px; font-size: 15px;">중국어선 단속 관련 법령</a></li>
+      </ul>
+      <div class="gnb-right-actions">
+        <span id="viewerCategoryBadge" style="color: #FFFFFF; font-size: 13px; font-weight: 700;">현행법령 · 행정규칙</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 첨부2 서브 탭 바 -->
+  <div class="viewer-subbar">
+    <div class="viewer-tabs">
+      <button type="button" class="viewer-tab active" onclick="filterSidebarMode('all', this)">법령·규칙명 목록</button>
+      <button type="button" class="viewer-tab" onclick="scrollToSection('bodySection', this)">법령본문</button>
+      <button type="button" class="viewer-tab" onclick="scrollToSection('addendumSection', this)">부칙</button>
+    </div>
+    <div style="font-size: 12.5px; color: var(--text-secondary);">
+      좌측 목록에서 다른 법령을 클릭하면 즉시 본문이 전환됩니다.
+    </div>
+  </div>
+
+  <!-- 첨부2 2단 분할 워크스페이스 (좌측: 검색/관련 법령 목록, 우측: 상세 본문) -->
+  <div class="viewer-workspace">
+    <!-- 좌측 목록 패널 -->
+    <aside class="viewer-sidebar" id="viewerSidebarList" aria-label="관련 법령 목록"></aside>
+
+    <!-- 우측 상세 본문 뷰어 -->
+    <section class="viewer-main">
+      <div class="viewer-toolbar">
+        <div class="viewer-mode-buttons">
+          <button type="button" class="mode-btn active" onclick="scrollToSection('bodySection')">본문</button>
+          <button type="button" class="mode-btn" onclick="scrollToSection('addendumSection')">부칙</button>
+          <button type="button" class="mode-btn accent" id="toggleOriginalViewBtn" onclick="toggleOriginalFileFrame()" style="display:none;">원본 파일 뷰어</button>
+        </div>
+
+        <div class="viewer-tools-right">
+          <select id="articleJumpSelect" class="inpage-search-input" style="width: 140px;" onchange="jumpToArticle(this.value)">
+            <option value="">조문 선택 이동</option>
+          </select>
+          <input
+            type="text"
+            id="inPageSearchInput"
+            class="inpage-search-input"
+            placeholder="화면내검색 입력..."
+            oninput="applyInPageHighlight(this.value)"
+          />
+          <button type="button" class="tool-icon-btn" onclick="changeFontSize(-1)" title="글자 축소">가-</button>
+          <button type="button" class="tool-icon-btn" onclick="changeFontSize(1)" title="글자 확대">가+</button>
+          <a id="downloadFileLink" href="#" class="tool-icon-btn" title="원본 파일 다운로드">⬇ 다운로드</a>
+          <button type="button" class="tool-icon-btn" onclick="window.print()" title="인쇄">🖨 인쇄</button>
+        </div>
+      </div>
+
+      <div class="viewer-content-scroll" id="viewerScrollArea">
+        <div class="law-doc-header" id="bodySection">
+          <h1 class="law-doc-title" id="docTitle">법령을 불러오는 중...</h1>
+          <div class="law-doc-subtitle" id="docSubtitle"></div>
+        </div>
+
+        <div class="law-doc-departments" id="docDepartment"></div>
+
+        <!-- PDF 등 내장 프레임 뷰어 영역 (선택 시 표시) -->
+        <div id="originalFileFrameBox" style="display:none; margin-bottom: 24px;">
+          <iframe id="originalFileIframe" style="width:100%; height:520px; border:1px solid var(--border-light); border-radius:6px;" title="원본 파일 뷰어"></iframe>
+        </div>
+
+        <!-- 조문 본문 영역 -->
+        <div class="law-doc-body" id="docContentBody"></div>
+
+        <!-- 부칙 영역 -->
+        <div class="law-addendum-section" id="addendumSection" style="display:none;">
+          <div class="law-addendum-heading">부칙</div>
+          <div class="law-doc-body" id="docAddendumBody"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentLawId = Number(urlParams.get('id') || 6);
+    let currentQuery = (urlParams.get('q') || '').trim();
+    let currentCategory = urlParams.get('category') || '전체';
+    let currentLawData = null;
+    let sidebarItems = [];
+    let currentFontSize = 15;
+
+    document.getElementById('viewerSearchInput').value = currentQuery;
+    document.getElementById('viewerSearchCategory').value = currentCategory || '전체';
+
+    document.getElementById('viewerTopSearchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      currentQuery = document.getElementById('viewerSearchInput').value.trim();
+      currentCategory = document.getElementById('viewerSearchCategory').value;
+      await loadSidebarAndActiveLaw(true);
+    });
+
+    /**
+     * 조문 텍스트를 장(제N장) 및 조(제N조) 단위로 구조화하고 검색어를 #FD3C2D 색상으로 하이라이트합니다.
+     */
+    function formatLawBodyHtml(rawText, highlightKeyword) {
+      const lines = String(rawText || '').split(/\r?\n/);
+      const articleList = [];
+      const htmlParts = [];
+
+      lines.forEach((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          htmlParts.push('<div style="height: 8px;"></div>');
+          return;
+        }
+
+        // 장 제목 (예: 제1장 총칙)
+        if (/^제\s*\d+\s*장/.test(trimmed)) {
+          htmlParts.push(`<div class="law-chapter-heading">${highlightText(trimmed, highlightKeyword)}</div>`);
+          return;
+        }
+
+        // 조문 제목 (예: 제1조(목적) ...)
+        const articleMatch = trimmed.match(/^(제\s*\d+\s*조(?:의\d+)?(?:\([^)]+\))?)(.*)$/);
+        if (articleMatch) {
+          const artId = `art_${idx}`;
+          const artTitle = articleMatch[1];
+          const artRest = articleMatch[2] || '';
+          articleList.push({ id: artId, label: artTitle });
+
+          htmlParts.push(`
+            <div class="law-article-block" id="${artId}">
+              <span class="badge badge-law" style="font-size:11px; padding:1px 6px; margin-right:4px;">조문</span>
+              <span class="law-article-title">${highlightText(artTitle, highlightKeyword)}</span>${highlightText(artRest, highlightKeyword)}
+            </div>
+          `);
+          return;
+        }
+
+        // 호/항 들여쓰기
+        htmlParts.push(`<div class="law-paragraph-line">${highlightText(trimmed, highlightKeyword)}</div>`);
+      });
+
+      // 조문 선택 드롭다운 갱신
+      const selectEl = document.getElementById('articleJumpSelect');
+      if (selectEl) {
+        selectEl.innerHTML = `<option value="">조문선택 (${articleList.length})</option>` +
+          articleList.map(a => `<option value="${a.id}">${escapeHtml(a.label)}</option>`).join('');
+      }
+
+      return htmlParts.join('');
+    }
+
+    function renderLawDetail(law, keywordToHighlight) {
+      currentLawData = law;
+      document.title = `${law.title} - 해양경찰 법령정보센터`;
+
+      // 상단 메뉴 활성 상태
+      document.getElementById('viewerNavLaw').classList.toggle('active', law.category === '법령');
+      document.getElementById('viewerNavRule').classList.toggle('active', law.category === '행정규칙');
+      document.getElementById('viewerNavChinese').classList.toggle('active', law.category === '중국어선 단속 관련 법령');
+      document.getElementById('viewerCategoryBadge').textContent = `${law.category} > ${law.sub_category || '현행'}`;
+
+      // 문서 제목 및 부제
+      document.getElementById('docTitle').innerHTML = highlightText(law.title, keywordToHighlight);
+      document.getElementById('docSubtitle').innerHTML = highlightText(law.subtitle, keywordToHighlight);
+
+      // 소관부서 (첨부2 우측 상단 스타일: 검색어 '수상레저' 등 하이라이트 포함)
+      document.getElementById('docDepartment').innerHTML = highlightText(law.department, keywordToHighlight);
+
+      // 본문 렌더링
+      document.getElementById('docContentBody').innerHTML = formatLawBodyHtml(law.content, keywordToHighlight);
+
+      // 부칙 렌더링
+      const addendumSec = document.getElementById('addendumSection');
+      if (law.addendum && law.addendum.trim()) {
+        addendumSec.style.display = 'block';
+        document.getElementById('docAddendumBody').innerHTML = highlightText(law.addendum, keywordToHighlight).replace(/\n/g, '<br/>');
+      } else {
+        addendumSec.style.display = 'none';
+      }
+
+      // 원본 다운로드 링크 및 PDF 프레임 설정
+      const downloadLink = document.getElementById('downloadFileLink');
+      const toggleBtn = document.getElementById('toggleOriginalViewBtn');
+      const frameBox = document.getElementById('originalFileFrameBox');
+      const iframe = document.getElementById('originalFileIframe');
+
+      if (law.stored_path) {
+        const fileUrl = `/storage/${encodeURI(law.stored_path)}`;
+        downloadLink.href = `${fileUrl}?download=1`;
+        downloadLink.style.display = 'inline-block';
+
+        if ((law.mime_type || '').includes('pdf') || (law.file_name || '').toLowerCase().endsWith('.pdf')) {
+          toggleBtn.style.display = 'inline-block';
+          iframe.src = fileUrl;
+          frameBox.style.display = 'block';
+        } else {
+          toggleBtn.style.display = 'none';
+          frameBox.style.display = 'none';
+          iframe.src = 'about:blank';
+        }
+      } else {
+        downloadLink.style.display = 'none';
+        toggleBtn.style.display = 'none';
+      }
+    }
+
+    function renderSidebar() {
+      const sidebarEl = document.getElementById('viewerSidebarList');
+      if (!sidebarItems.length) {
+        sidebarEl.innerHTML = `<div style="padding:20px; color:#777; font-size:13px;">표시할 목록이 없습니다.</div>`;
+        return;
+      }
+
+      sidebarEl.innerHTML = sidebarItems.map((item, idx) => {
+        const isActive = item.id === currentLawId;
+        return `
+          <div class="sidebar-law-item ${isActive ? 'active' : ''}" onclick="selectLawFromSidebar(${item.id})">
+            <div class="sidebar-law-title">
+              ${idx + 1}. ${highlightText(item.title, currentQuery)}
+            </div>
+            <div class="sidebar-law-sub">${escapeHtml(item.subtitle)}</div>
+            ${isActive ? `
+              <div class="sidebar-tree" onclick="event.stopPropagation()">
+                <button type="button" class="sidebar-tree-btn" onclick="scrollToSection('bodySection')">⊞ 본문</button>
+                <button type="button" class="sidebar-tree-btn" onclick="scrollToSection('addendumSection')">⊞ 부칙</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectLawFromSidebar(id) {
+      currentLawId = Number(id);
+      const res = await fetch(`/api/laws/${currentLawId}`);
+      const data = await res.json();
+      if (data.ok) {
+        renderLawDetail(data.item, currentQuery);
+        renderSidebar();
+        document.getElementById('viewerScrollArea').scrollTop = 0;
+      }
+    }
+
+    async function loadSidebarAndActiveLaw(pickFirstIfSearched = false) {
+      const res = await fetch(`/api/laws?category=${encodeURIComponent(currentCategory)}&q=${encodeURIComponent(currentQuery)}`);
+      const data = await res.json();
+      if (data.ok) {
+        sidebarItems = data.items;
+        if (pickFirstIfSearched && sidebarItems.length > 0) {
+          currentLawId = sidebarItems[0].id;
+        }
+      }
+
+      const detailRes = await fetch(`/api/laws/${currentLawId}`);
+      const detailData = await detailRes.json();
+      if (detailData.ok) {
+        // 만약 검색 결과 목록에 현재 선택된 법령이 없으면 맨 위에 추가
+        if (!sidebarItems.some(i => i.id === detailData.item.id)) {
+          sidebarItems.unshift(detailData.item);
+        }
+        renderLawDetail(detailData.item, currentQuery);
+      } else if (sidebarItems.length > 0) {
+        currentLawId = sidebarItems[0].id;
+        renderLawDetail(sidebarItems[0], currentQuery);
+      }
+
+      renderSidebar();
+    }
+
+    function applyInPageHighlight(inPageKeyword) {
+      if (!currentLawData) return;
+      const combinedQuery = [currentQuery, inPageKeyword.trim()].filter(Boolean).join(' ');
+      renderLawDetail(currentLawData, combinedQuery);
+    }
+
+    function jumpToArticle(articleDomId) {
+      if (!articleDomId) return;
+      const el = document.getElementById(articleDomId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function scrollToSection(secId) {
+      const el = document.getElementById(secId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function toggleOriginalFileFrame() {
+      const box = document.getElementById('originalFileFrameBox');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function changeFontSize(delta) {
+      currentFontSize = Math.min(22, Math.max(12, currentFontSize + delta));
+      document.getElementById('docContentBody').style.fontSize = `${currentFontSize}px`;
+      document.getElementById('docAddendumBody').style.fontSize = `${currentFontSize}px`;
+    }
+
+    function filterSidebarMode(mode, btnEl) {
+      document.querySelectorAll('.viewer-tab').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+    }
+
+    loadSidebarAndActiveLaw(false);
+  </script>
+</body>
+</html>
+

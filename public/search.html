@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>법령 검색 결과 - 해양경찰 법령정보센터</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div class="top-utility-bar">
+    <div class="top-utility-inner">
+      <div><strong>해양경찰 법령정보센터</strong> &gt; 통합 검색 결과 화면</div>
+      <div class="util-links">
+        <a href="/index.html">🏠 홈 화면으로 돌아가기</a>
+        <a href="/admin.html" class="admin-badge">⚙ 관리자 (파일 업로드)</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/index.html" class="brand-logo" title="홈 화면으로 돌아가기">
+        <div class="brand-emblem">KCG</div>
+        <div class="brand-text-group">
+          <span class="brand-agency">해양경찰청 · KOREA COAST GUARD</span>
+          <span class="brand-title">해양경찰 법령정보센터</span>
+        </div>
+      </a>
+
+      <form id="searchPageForm" class="header-search-form" action="/search.html" method="GET">
+        <select name="category" id="searchCategory" class="header-search-select">
+          <option value="전체">전체</option>
+          <option value="법령">법령</option>
+          <option value="행정규칙">행정규칙</option>
+          <option value="중국어선 단속 관련 법령">중국어선 단속 관련 법령</option>
+        </select>
+        <input type="text" name="q" id="searchQueryInput" class="header-search-input" placeholder="검색어를 입력하세요..." />
+        <button type="submit" class="header-search-btn">검색</button>
+      </form>
+    </div>
+  </header>
+
+  <nav class="gnb-bar" aria-label="주요 메뉴">
+    <div class="gnb-inner">
+      <ul class="gnb-menu">
+        <li><a href="/list.html?category=법령" id="navLaw">법령</a></li>
+        <li><a href="/list.html?category=행정규칙" id="navRule">행정규칙</a></li>
+        <li><a href="/list.html?category=중국어선 단속 관련 법령" id="navChinese">중국어선 단속 관련 법령</a></li>
+      </ul>
+      <div class="gnb-right-actions">
+        <a href="/index.html" class="btn-home-return">🏠 홈 화면으로 돌아가기</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <div class="page-title-bar">
+      <div class="page-title-group">
+        <h1 id="searchResultTitle">검색 결과 목록</h1>
+        <p id="searchResultSub">검색 목록에서 원하는 항목을 클릭하면 새 창에 해당 법령·행정규칙 상세 내용이 표시됩니다.</p>
+      </div>
+      <div class="page-actions">
+        <a href="/index.html" class="btn btn-coral">🏠 홈 화면으로 돌아가기</a>
+      </div>
+    </div>
+
+    <div class="law-list-container">
+      <div class="law-list-header">
+        <span id="searchCountSummary">검색 중...</span>
+        <span>일치하는 검색어는 <strong style="color: var(--color-red);">붉은 오렌지색(#FD3C2D)</strong>으로 강조 표시됩니다.</span>
+      </div>
+      <div id="searchResultsList"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><strong>해양경찰 법령정보센터</strong> | 로컬 PC 독립 운영 웹 애플리케이션</div>
+      <div><a href="/index.html" style="text-decoration: underline;">홈 화면으로 돌아가기</a></div>
+    </div>
+  </footer>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const q = (params.get('q') || '').trim();
+    const category = params.get('category') || '전체';
+
+    document.getElementById('searchCategory').value = category;
+    document.getElementById('searchQueryInput').value = q;
+
+    if (category === '법령') document.getElementById('navLaw').classList.add('active');
+    if (category === '행정규칙') document.getElementById('navRule').classList.add('active');
+    if (category === '중국어선 단속 관련 법령') document.getElementById('navChinese').classList.add('active');
+
+    async function runSearch() {
+      const titleEl = document.getElementById('searchResultTitle');
+      const summaryEl = document.getElementById('searchCountSummary');
+      const listEl = document.getElementById('searchResultsList');
+
+      if (q) {
+        titleEl.innerHTML = `🔍 ‘<span style="color:var(--color-red);">${escapeHtml(q)}</span>’ 검색 결과 (${escapeHtml(category)})`;
+      } else {
+        titleEl.textContent = `🔍 전체 법령·행정규칙 검색 목록 (${category})`;
+      }
+
+      try {
+        const res = await fetch(`/api/laws?category=${encodeURIComponent(category)}&q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        if (!data.ok) {
+          listEl.innerHTML = '<div style="padding:30px; text-align:center;">검색 처리 중 오류가 발생했습니다.</div>';
+          return;
+        }
+
+        summaryEl.textContent = `검색 결과 총 ${data.items.length}건`;
+
+        if (data.items.length === 0) {
+          listEl.innerHTML = `
+            <div style="padding: 48px 20px; text-align: center;">
+              <p style="font-size: 17px; font-weight: 700; color: var(--color-brown); margin-bottom: 10px;">
+                ‘${escapeHtml(q)}’에 대한 검색 결과가 없습니다.
+              </p>
+              <p style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                검색어의 철자가 정확한지 확인하시거나, 검색 분류를 ‘전체’로 변경해 다시 검색해 보세요.
+              </p>
+              <a href="/index.html" class="btn btn-primary">🏠 홈 화면으로 돌아가기</a>
+            </div>
+          `;
+          return;
+        }
+
+        listEl.innerHTML = data.items.map((item, idx) => `
+          <div class="law-item">
+            <div class="law-item-main">
+              <div class="law-item-top">
+                <span class="law-item-index">${idx + 1}.</span>
+                <span class="badge ${getBadgeClass(item.category)}">${escapeHtml(item.category)} · ${escapeHtml(item.sub_category || '')}</span>
+                <a href="javascript:void(0)" class="law-item-title" onclick="openLawViewer(${item.id}, '${escapeHtml(q)}', '${escapeHtml(category)}')">
+                  ${highlightText(item.title, q)}
+                </a>
+              </div>
+              <div class="law-item-subtitle">${highlightText(item.subtitle, q)}</div>
+              <div class="law-item-snippet">${createSnippet(item.content, q, 200)}</div>
+              <div class="law-item-meta">
+                <span>🏢 소관부서: ${highlightText(item.department.split('\n')[0], q)}</span>
+                <span>📄 파일: ${escapeHtml(item.file_name)}</span>
+              </div>
+            </div>
+            <div style="flex-shrink: 0;">
+              <button type="button" class="btn btn-primary" onclick="openLawViewer(${item.id}, '${escapeHtml(q)}', '${escapeHtml(category)}')">
+                새 창으로 열람 ↗
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        listEl.innerHTML = `<div style="padding:30px; text-align:center; color:red;">검색 오류: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    runSearch();
+  </script>
+</body>
+
+</html>
